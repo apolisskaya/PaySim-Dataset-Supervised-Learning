@@ -1,6 +1,7 @@
 from sklearn import datasets, model_selection as ms
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
+from sklearn.neighbors import KNeighborsClassifier
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,9 +37,28 @@ predictions = logisticRegr.predict(x_test)
            [ True Positives ] [ False Positives / Type I ]
 [ False Negatives / Type II ] [ True Negatives ]
 """
-confusion_matrix = confusion_matrix(y_test, predictions)
-print('confusion matrix\n', confusion_matrix)
+confusion_matrix_log = confusion_matrix(y_test, predictions)
+print('confusion matrix\n', confusion_matrix_log)
 
 # check accuracy of the model / performance
 score = logisticRegr.score(x_test, y_test)
 print('Score: ', score)
+
+# now let's see what initially occurs with the k-N sklearn classifier function
+k_neighbors_classifier = KNeighborsClassifier(n_neighbors=5, weights='distance', p=2)
+k_neighbors_classifier.fit(x_train, y_train)
+
+predictions_knn = k_neighbors_classifier.predict(x_test)
+print('k-NN score: ', k_neighbors_classifier.score(x_test, y_test))
+confusion_matrix_knn = confusion_matrix(y_test, list(predictions_knn))
+print('confusion matrix\n', confusion_matrix_knn)
+
+# possible filter - minimizes type ii errors but maximizes type i
+predictions_knn_prob = k_neighbors_classifier.predict_proba(x_test)
+knn_classifier_filter = []
+for prediction in predictions_knn_prob:
+    if list(prediction)[0] != 1.0:
+        knn_classifier_filter.append(1)
+    else:
+        knn_classifier_filter.append(0)
+print(confusion_matrix(y_test, knn_classifier_filter))
